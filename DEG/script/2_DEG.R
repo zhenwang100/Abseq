@@ -10,7 +10,7 @@ for (cell_type in c("B", "CD4-T", "CD8-T", "DC", "gdT", "Mono", "NK", "plasma-B"
 	# 'Replicate' is biological replicate, 'label' is before or after immunization
 	data<-read.table(cnt.file, header = T)
 	meta<-data.frame(replicate = c("C3", "C4", "C3", "C4", "C3", "C4"), 
-		label = c("before", "before", "after", "after", "after", "after"))
+		label = c(0, 0, 42/56, 42/56, 1, 1))
 
 	dds<-DESeqDataSetFromMatrix(countData = data, colData = meta, design = ~replicate + label)
 	
