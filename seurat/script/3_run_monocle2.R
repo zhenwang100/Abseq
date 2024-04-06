@@ -35,14 +35,12 @@ expressed_genes<-row.names(subset(fData(cds), num_cells_expressed >= 10))
 
 head(fData(cds))	# num_cells_expressed for genes
 
-# Select genes for ordering cells
-##### Method 1: DEGs among cell type #####
+# Identify DEGs for ordering cells
 diff<-differentialGeneTest(cds[expressed_genes,], fullModelFormulaStr = "~celltype", cores = 20)
 diff_genes<-subset(diff, qval < 0.01)
 diff_genes<-diff_genes[order(diff_genes$qval, decreasing = F),]
 
-# There are too many DEGs (~10000), but only ~2000 are recommended for ordering genes  
-order_genes<-rownames(diff_genes)[1:2000]
+order_genes<-rownames(diff_genes)[1:3000]
 cds<-setOrderingFilter(cds, order_genes)
 ggsave("order_gene_DEG.pdf", plot_ordering_genes(cds))
 
@@ -61,60 +59,26 @@ ggsave("traj_celltype_DEG.pdf", traj_celltype_DEG)
 traj_state_DEG<-plot_cell_trajectory(cds, color_by = "State", show_backbone = TRUE)
 ggsave("traj_state_DEG.pdf", traj_state_DEG)
 
-# Plot trajectory by orig samples (facet to examine batch effects)
-traj_orig_DEG<-plot_cell_trajectory(cds, color_by = "orig.ident") + facet_wrap("~orig.ident", nrow = 1)
-ggsave("traj_orig_DEG.pdf", traj_orig_DEG)
-
-# Plot trajectory by pseudotime (root state should be re-assigned)
+# Plot trajectory by pseudotime (root state should be assigned according to data)
 cds<-orderCells(cds, root_state = 4)
 traj_pseudo_DEG<-plot_cell_trajectory(cds, color_by = "Pseudotime", show_backbone = TRUE)
 ggsave("traj_pseudo_DEG.pdf", traj_pseudo_DEG)
 
-
-##### Method 2: Highly dispersed genes (HDG) #####
-disp_table<-dispersionTable(cds)
-# 1143 genes
-disp_genes<-subset(disp_table, mean_expression >= 0.1 & dispersion_empirical >= 1 * dispersion_fit)$gene_id
-cds<-setOrderingFilter(cds, disp_genes)
-ggsave("order_gene_HDG.pdf", plot_ordering_genes(cds))
-
-# Order cells
-cds<-reduceDimension(cds, max_components = 2, method = 'DDRTree')
-cds <- orderCells(cds)
-table(pData(cds)$celltype, pData(cds)$State)	# Summary cell type by state
-
-# Plot trajectory by cell type
-traj_celltype_HDG<-plot_cell_trajectory(cds, color_by = "celltype", show_backbone = TRUE)
-ggsave("traj_celltype_HDG.pdf", traj_celltype_HDG)
-
-# Plot trajectory by state
-traj_state_HDG<-plot_cell_trajectory(cds, color_by = "State", show_backbone = TRUE)
-ggsave("traj_state_HDG.pdf", traj_state_HDG)
-
-# Plot trajectory by orig samples (facet to examine batch effects)
-traj_orig_HDG<-plot_cell_trajectory(cds, color_by = "orig.ident") + facet_wrap("~orig.ident", nrow = 1)
-ggsave("traj_orig_HDG.pdf", traj_orig_HDG)
-
-# Plot trajectory by pseudotime (root state = 1)
-traj_pseudo_HDG<-plot_cell_trajectory(cds, color_by = "Pseudotime", show_backbone = TRUE)
-ggsave("traj_pseudo_HDG.pdf", traj_pseudo_HDG)
-
 # Save monocle dataset
 save(cds, file = "cds.RData")
 
-
-# Perform branch-specific gene selection analysis
-BEAM_res<-BEAM(cds[disp_genes,], branch_point = 1, cores = 1)
+# Perform branch-specific gene selection analysis (branch_point should be assigned according to data)
+BEAM_res<-BEAM(cds[order_genes,], branch_point = 2)
 BEAM_res<-BEAM_res[order(BEAM_res$qval),]
 BEAM_res<-BEAM_res[,c("gene_short_name", "pval", "qval")]
 
 pdf("BEAM_heatmap.pdf")
-plot_genes_branched_heatmap(cds[row.names(subset(BEAM_res, qval < 1e-4)),], branch_point = 1, num_clusters = 4, cores = 1, use_gene_short_name = T, show_rownames = T)
+plot_genes_branched_heatmap(cds[row.names(subset(BEAM_res, qval < 1e-4)),], branch_point = 2, num_clusters = 6, cores = 1, use_gene_short_name = T, show_rownames = T)
 dev.off()
 
-# Only plot marker genes
+# Plot marker genes
 markers<-c("CR2", "ITGAX", "TBX21", "CXCR4", "CD69", "SELL", "ITGB1", "ITGB7", "S100A6", "S100A7", "S100A13", "IGHA", "IGHM", "CD38")
 pdf("marker_heatmap.pdf")
-plot_genes_branched_heatmap(cds[markers,], branch_point = 1, num_clusters = 4, cores = 1, use_gene_short_name = T, show_rownames = T)
+plot_genes_branched_heatmap(cds[markers,], branch_point = 2, num_clusters = 4, cores = 1, use_gene_short_name = T, show_rownames = T)
 dev.off()
 
