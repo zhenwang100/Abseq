@@ -98,4 +98,3 @@ table(comb_immune_data$orig.ident, comb_immune_data$annotation_cluster)
 
 # Preserve data
 save(comb_immune_data, file = "comb_immune.Rdata")
-

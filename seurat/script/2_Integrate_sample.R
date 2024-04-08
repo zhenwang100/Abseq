@@ -53,9 +53,6 @@ comb_data<-FindClusters(comb_data)
 cluster<-DimPlot(comb_data, label = TRUE)
 ggsave("cluster_0.8.pdf", cluster)
 
-# Save integrated data
-save(list = ls(all.names = TRUE), file = "comb.Rdata")
-
 # Optional: Change resulution
 for (res in c(0.1, 0.3, 0.5, 1.0, 1.2, 1.5)) {
 	comb_data<-FindClusters(comb_data, resolution = res)
@@ -63,7 +60,7 @@ for (res in c(0.1, 0.3, 0.5, 1.0, 1.2, 1.5)) {
 	ggsave(pdf, DimPlot(comb_data, label = T))
 }
 # Choose a resolution
-Idents(comb_data)<-comb_data@meta.data$integrated_snn_res.0.8
+Idents(comb_data)<-comb_data@meta.data$integrated_snn_res.0.5
 
 # Gene level analysis should be performed for SCT assay (not integrated or RNA), including expression visualization
 DefaultAssay(comb_data)<-"SCT"
@@ -79,8 +76,10 @@ markers<-DotPlot(comb_data, features = c(
 	"ITGAX", "FCER1A",		# cDC
 	"IL3RA", "NRP1"			# pDC
 	),) + RotatedAxis()
-ggsave("markers_0.8.pdf", markers)
+ggsave("markers_0.5.pdf", markers)
+
+# Save integrated data
+save(list = ls(all.names = TRUE), file = "comb.Rdata")
 
 # Identifying markers for a cluster
 markers_0<-FindMarkers(comb_data, ident.1 = 0, ident.2 = c(1, 5, 8), assay = "SCT")
-

@@ -3,7 +3,6 @@ library(clusterProfiler)
 library(ggplot2)
 
 # Input file
-# Note: The logFC is 'before - after', so logFC > 0 is down-regulated DEGs after, logFC < 0 is up-regulated DEGs after. 
 stat<-read.table("pseudobulk/Mono_stat.txt", header = T, sep = "\t")
 
 genecut<-0.05	# DEG cut off
@@ -11,7 +10,7 @@ enrichcut<-0.05	# enrichment cut off
 
 # Significant DEGs (can distinguish down- and up-regulated DEGs)
 sig<-subset(stat, padj < genecut)
-sig<-subset(stat, padj < genecut & log2FoldChange < 0)
+sig<-subset(stat, padj < genecut & log2FoldChange > 0)
 
 # Gene symbol to ID
 symbols<-rownames(sig)
